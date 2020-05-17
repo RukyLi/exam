@@ -14,6 +14,7 @@
         <div class="flex-box">
           <div class="plat-name">{{detail.platName}}</div>
           <span class="type">{{detail.platBackgroundDetailExpand}}</span>
+          <span class="type" style="background:#F56C6C">{{score}}</span>
         </div>
         <!-- <div>首次出借</div> -->
         <el-row>
@@ -202,6 +203,7 @@ export default {
       detail:{},
       dayThirty:{},
       lastData:{},
+      score:'',
       basicSelectList: [
         {
           value: 1,
@@ -351,7 +353,7 @@ export default {
       return option
     },
     barChart() {
-      const series = this.barSeries()
+      const {series,legend} = this.barSeries()
       const index = this.basicSelect.value-1
       const unit = ['万元','%','人','人','%','秒']
       const option = {
@@ -359,8 +361,7 @@ export default {
           text: '基础数据'
         },
         tooltip: {},
-        legend: {
-        },
+        legend: {data:legend},
         xAxis: {
           data: this.infoDate,
         },
@@ -395,7 +396,7 @@ export default {
           trigger: 'axis'
         },
         legend: {
-          data: ['邮件营销', '联盟广告']
+          data: [name1, name2]
         },
         grid: {
           left: '100px',
@@ -489,6 +490,7 @@ export default {
       }
       let value = this.basicSelect.value;
       let series = []
+      let legend = []
       if(value===1||value===2){
         series = [
           {
@@ -502,37 +504,58 @@ export default {
             },
           }
         ]
+        legend = ''
       }else if(value===3){
-        series = [
-          {...seriesConfig, itemStyle:colors.yellow,data: this.infoData.y1},
-          {...seriesConfig, itemStyle:colors.red,data: this.infoData.y2},
-          {...seriesConfig, itemStyle:colors.green,data: this.infoData.y3},
-          {...seriesConfig, itemStyle:colors.blue,data: this.infoData.y4}
+        const chartSeries = [
+          {data:'y1',color:'yellow',name:'0-1万投资人'},
+          {data:'y2',color:'red',name:'1-10万投资人'},
+          {data:'y3',color:'green',name:'10-100万投资人'},
+          {data:'y4',color:'blue',name:'100万以上投资人'},
         ]
+        series = this.getSeriesConfig(chartSeries,seriesConfig)
+        legend = ['0-1万投资人','1-10万投资人','10-100万投资人','100万以上投资人']
       }else if(value===4){
-        series = [
-          {...seriesConfig,itemStyle:colors.yellow,data: this.infoData.y5},
-          {...seriesConfig,itemStyle:colors.red,data: this.infoData.y6},
-          {...seriesConfig,itemStyle:colors.green,data: this.infoData.y7}
+        const chartSeries = [
+          {data:'y5',color:'yellow',name:'0-20万借款人'},
+          {data:'y6',color:'red',name:'20-100万借款人'},
+          {data:'y7',color:'green',name:'100万以上借款人'},
         ]
+        series = this.getSeriesConfig(chartSeries,seriesConfig)
+         legend =  ['0-20万借款人','20-100万借款人','100万以上借款人']
       }else if(value===5){
-        series = [
-          {...seriesConfig,itemStyle:colors.yellow,data: this.infoData.y1},
-          {...seriesConfig,itemStyle:colors.red,data: this.infoData.y2},
-          {...seriesConfig,itemStyle:colors.green,data: this.infoData.y3},
-          {...seriesConfig,itemStyle:colors.blue,data: this.infoData.y4},
-          {...seriesConfig,itemStyle:colors.dark,data: this.infoData.y5},
+          const chartSeries = [
+          {data:'y1',color:'yellow',name:'0-1个月（%）'},
+          {data:'y2',color:'red',name:'1-2个月（%）'},
+          {data:'y3',color:'green',name:'2-3个月（%）'},
+          {data:'y4',color:'blue',name:'3-6个月（%）'},
+          {data:'y5',color:'dark',name:'6个月及以上（%）'}
         ]
+        series = this.getSeriesConfig(chartSeries,seriesConfig)
+         legend = ['0-1个月（%）','1-2个月（%）','2-3个月（%）','3-6个月（%）','6个月及以上（%）']
+
       }else if(value===6){
-        series = [
-          {...seriesConfig,itemStyle:colors.yellow,data: this.infoData.y6},
-          {...seriesConfig,itemStyle:colors.red,data: this.infoData.y7},
-          {...seriesConfig,itemStyle:colors.green,data: this.infoData.y8},
-          {...seriesConfig,itemStyle:colors.blue,data: this.infoData.y9},
-          {...seriesConfig,itemStyle:colors.dark,data: this.infoData.y10},
+          const chartSeries = [
+          {data:'y6',color:'yellow',name:'0-1个月（s）'},
+          {data:'y7',color:'red',name:'1-2个月（s）'},
+          {data:'y8',color:'green',name:'2-3个月（s）'},
+          {data:'y9',color:'blue',name:'3-6个月（s）'},
+          {data:'y10',color:'dark',name:'6个月及以上（s）'}
         ]
+        series = this.getSeriesConfig(chartSeries,seriesConfig)
+         legend = ['0-1个月（s）','1-2个月（s）','2-3个月（s）','3-6个月（s）','6个月及以上（s）']
+
+       
       }
-      return series
+      return {series,legend}
+    },
+    getSeriesConfig(configArr,seriesConfig){
+      let seriesArr = []
+      for(let item of configArr){
+        seriesArr.push(
+           {...seriesConfig,name:item.name,itemStyle:colors[item.color],data: this.infoData[item.data]},
+        )
+      }
+      return seriesArr
     },
     async getDetailData(){
       let platId = this.$route.query.platId
@@ -543,6 +566,7 @@ export default {
       const result = await request({ url: '/head',method:'post', data })
       this.detail = result.data.data[0]
       this.dayThirty = result.data.data[0].day_thirty
+      this.score = result.data.data[2].score
       this.lastData = result.data.data[1]
       } catch (error) {
         
